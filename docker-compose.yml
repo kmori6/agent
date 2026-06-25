@@ -1,0 +1,33 @@
+services:
+  llm:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - model_cache:/root/.cache
+    command: >
+      -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M
+      --alias qwen-3.6-35b-a3b
+      --host 0.0.0.0
+      --port 8080
+      --ctx-size 81920
+      --n-gpu-layers 999
+      --cache-type-k q8_0
+      --cache-type-v q8_0
+      --temp 0.6
+      --top-p 0.95
+      --top-k 20
+      --min-p 0.0
+      --presence-penalty 0.0
+      --repeat-penalty 1.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  model_cache:
