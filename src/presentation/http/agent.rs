@@ -1,26 +1,35 @@
-use crate::application::usecase::agent_usecase::AgentUseCase;
 use crate::domain::model::input_item::InputItem;
-use axum::Json;
+use crate::presentation::state::app_state::AppState;
+use axum::{Json, extract::State, http::StatusCode};
 use serde::Deserialize;
-use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub struct RequestAgent {
     model: String,
+    #[serde(default)]
+    instructions: String,
     input: Vec<InputItem>,
 }
 
-pub async fn agent(Json(payload): Json<RequestAgent>) -> Json<Value> {
+pub async fn agent(
+    State(state): State<AppState>,
+    Json(payload): Json<RequestAgent>,
+) -> Result<Json<Vec<InputItem>>, (StatusCode, String)> {
     println!("Received request: {:?}", payload);
 
-    let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
-    let agent_usecase = AgentUseCase::new(api_key);
+    let RequestAgent {
+        model,
+        instructions,
+        input,
+    } = payload;
 
-    let response_json = agent_usecase
-        .run(&payload.model, payload.input)
+    let output = state
+        .agent_usecase
+        .run(&model, &instructions, input)
         .await
-        .expect("Failed to run agent usecase");
-    println!("Received response: {:?}", response_json);
+        .map_err(|error| (StatusCode::BAD_GATEWAY, error.to_string()))?;
 
-    Json(response_json)
+    println!("Received response: {:?}", output);
+
+    Ok(Json(output))
 }
