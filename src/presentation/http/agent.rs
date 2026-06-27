@@ -1,5 +1,5 @@
 use crate::application::usecase::agent_usecase::AgentUseCase;
-use crate::domain::model::message::Message;
+use crate::domain::model::input_item::InputItem;
 use axum::Json;
 use serde::Deserialize;
 use serde_json::Value;
@@ -7,7 +7,7 @@ use serde_json::Value;
 #[derive(Debug, Deserialize)]
 pub struct RequestAgent {
     model: String,
-    input: Vec<Message>,
+    input: Vec<InputItem>,
 }
 
 pub async fn agent(Json(payload): Json<RequestAgent>) -> Json<Value> {

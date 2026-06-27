@@ -1,4 +1,4 @@
-use crate::domain::model::message::Message;
+use crate::domain::model::input_item::InputItem;
 use reqwest::Client;
 use serde_json::{Value, json};
 
@@ -15,7 +15,7 @@ impl AgentUseCase {
         }
     }
 
-    pub async fn run(&self, model: &str, input: Vec<Message>) -> Result<Value, reqwest::Error> {
+    pub async fn run(&self, model: &str, input: Vec<InputItem>) -> Result<Value, reqwest::Error> {
         let body = json!({
             "model": model,
             "input": input
