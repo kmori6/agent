@@ -3,15 +3,9 @@ use crate::domain::model::input_item::InputItem;
 use crate::domain::port::llm_provider::LlmProvider;
 use async_trait::async_trait;
 use reqwest::Client;
-use serde::Deserialize;
-use serde_json::json;
+use serde_json::{Value, json};
 
 const OPENAI_RESPONSES_URL: &str = "https://api.openai.com/v1/responses";
-
-#[derive(Debug, Deserialize)]
-struct ResponseOutput {
-    output: Vec<InputItem>,
-}
 
 #[derive(Debug, Clone)]
 pub struct OpenaiLlmProvider {
@@ -33,7 +27,7 @@ impl LlmProvider for OpenaiLlmProvider {
         instruction: &str,
         input: Vec<InputItem>,
     ) -> Result<Vec<InputItem>, LlmProviderError> {
-        let body = json!({
+        let request_body = json!({
             "model": model,
             "input": input,
             "instructions": instruction,
@@ -43,7 +37,7 @@ impl LlmProvider for OpenaiLlmProvider {
             .client
             .post(OPENAI_RESPONSES_URL)
             .bearer_auth(&self.api_key)
-            .json(&body)
+            .json(&request_body)
             .send()
             .await
             .map_err(|e| LlmProviderError::ApiCall(format!("failed to send request: {e}")))?;
@@ -55,10 +49,17 @@ impl LlmProvider for OpenaiLlmProvider {
             )));
         }
 
-        let response_body = response.json::<ResponseOutput>().await.map_err(|e| {
+        let response_body = response.json::<Value>().await.map_err(|e| {
             LlmProviderError::ResponseParse(format!("failed to parse response: {e}"))
         })?;
 
-        Ok(response_body.output)
+        let value_output = response_body
+            .get("output")
+            .ok_or_else(|| LlmProviderError::ResponseParse("missing output field".to_string()))?;
+
+        let output = serde_json::from_value::<Vec<InputItem>>(value_output.clone())
+            .map_err(|e| LlmProviderError::ResponseParse(format!("failed to parse output: {e}")))?;
+
+        Ok(output)
     }
 }
