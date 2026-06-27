@@ -7,6 +7,7 @@ use crate::presentation::state::app_state::AppState;
 use axum::Router;
 use axum::routing::{get, post};
 use dotenvy::dotenv_override;
+use reqwest::Client;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -20,7 +21,8 @@ async fn main() {
     dotenv_override().ok();
 
     let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
-    let llm_provider: Arc<dyn LlmProvider> = Arc::new(OpenaiLlmProvider::new(api_key));
+    let llm_provider: Arc<dyn LlmProvider> =
+        Arc::new(OpenaiLlmProvider::new(api_key, Client::new()));
     let agent_usecase = Arc::new(AgentUsecase::new(llm_provider));
     let app_state = AppState { agent_usecase };
 

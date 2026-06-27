@@ -1,18 +1,13 @@
+use crate::domain::error::llm_provider_error::LlmProviderError;
 use crate::domain::model::input_item::InputItem;
-use std::error::Error;
-use std::future::Future;
-use std::pin::Pin;
+use async_trait::async_trait;
 
-pub type LlmProviderError = Box<dyn Error + Send + Sync>;
-
-pub type LlmProviderFuture<'a> =
-    Pin<Box<dyn Future<Output = Result<Vec<InputItem>, LlmProviderError>> + Send + 'a>>;
-
+#[async_trait]
 pub trait LlmProvider: Send + Sync {
-    fn response<'a>(
-        &'a self,
-        model: &'a str,
-        instruction: &'a str,
+    async fn response(
+        &self,
+        model: &str,
+        instruction: &str,
         input: Vec<InputItem>,
-    ) -> LlmProviderFuture<'a>;
+    ) -> Result<Vec<InputItem>, LlmProviderError>;
 }

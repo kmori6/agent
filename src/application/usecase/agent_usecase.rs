@@ -1,5 +1,6 @@
+use crate::domain::error::llm_provider_error::LlmProviderError;
 use crate::domain::model::input_item::InputItem;
-use crate::domain::port::llm_provider::{LlmProvider, LlmProviderError};
+use crate::domain::port::llm_provider::LlmProvider;
 use std::sync::Arc;
 
 pub struct AgentUsecase {
