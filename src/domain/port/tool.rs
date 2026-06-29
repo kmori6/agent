@@ -1,6 +1,7 @@
 use crate::domain::error::tool_error::ToolError;
+use crate::domain::model::function::Function;
 use async_trait::async_trait;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 #[async_trait]
 pub trait Tool: Send + Sync {
@@ -10,12 +11,12 @@ pub trait Tool: Send + Sync {
 
     fn parameters(&self) -> Value;
 
-    fn spec(&self) -> Value {
-        json!({
-            "name": self.name(),
-            "description": self.description(),
-            "parameters": self.parameters(),
-        })
+    fn function(&self) -> Function {
+        Function {
+            name: self.name().to_string(),
+            description: self.description().to_string(),
+            parameters: self.parameters(),
+        }
     }
 
     async fn execute(&self, arguments: Value) -> Result<Value, ToolError>;
